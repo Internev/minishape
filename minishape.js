@@ -1,7 +1,6 @@
-const genRandomInput = () => {
+const genRandomInput = (len = 1000) => {
   const chars =
     'abcdefghijklmnopqrstuvwxyz()[]-+/\\,.<>?;:\'"!@#$%^&*~`1234567890'
-  const len = Math.floor(Math.random() * 100000)
   let result = ''
   for (let i = 0; i < len; i++) {
     result += chars[Math.floor(Math.random() * chars.length)]
@@ -9,9 +8,25 @@ const genRandomInput = () => {
   return result
 }
 
-const input = genRandomInput()
+function* progressiveSubstringGenerator(inputString, chunkSize) {
+  let index = 0;
+  let remainingCharacters = inputString.length;
+  
+  while (index < inputString.length) {
+      const s = inputString.substring(index, index + chunkSize);
+      yield { s, remainingCharacters };
+      index += chunkSize;
+      remainingCharacters -= chunkSize;
+  }
+}
 
-const halfcircle = () => {
+const input = genRandomInput(50000)
+
+const substringGenerator = progressiveSubstringGenerator(input, 2)
+
+const remaining = { len: 50000}
+
+const heart = () => {
   // Create a half circle from text up to 60 characters wide.
   const n = 8
   let result = ''
@@ -22,24 +37,38 @@ const halfcircle = () => {
         (Math.sqrt((x + n) * (x + n) + y * y) <= n ||
           Math.sqrt((x - n) * (x - n) + y * y) <= n)
       ) {
-        result += '♥♥'
+        const { value, done } = substringGenerator.next()
+        if (done) return result
+        result += value.s
+        remaining.len = value.remainingCharacters
       } else if (y === 0 && Math.abs(x) !== n * 2) {
-        console.log('x', x)
-        result += '♥♥'
+        const { value, done } = substringGenerator.next()
+        if (done) return result
+        result += value.s
+        remaining.len = value.remainingCharacters
       } else if (y > 0 && Math.abs(x) <= 2 * n - y) {
-        result += '♥♥'
+        const { value, done } = substringGenerator.next()
+        if (done) return result
+        result += value.s
+        remaining.len = value.remainingCharacters
       } else {
         result += '  '
       }
     }
     result += '\n'
   }
+  result += '\n\n\n'
   return result
 }
 
 const minishape = (text, shape = 'heart') => {
   // make two half circles side by side
-  console.log(halfcircle())
+  let result = ''
+  while (remaining.len > 1685) {
+    console.log(remaining.len)
+    result += heart()
+  }
+  console.log(result)
 }
 
 minishape(input, 'heart')
